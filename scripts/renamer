@@ -2,12 +2,64 @@
 
 use strict;
 use warnings;
-use Getopt::Long;
-use File::Find;
+use Pod::Usage;
+use Getopt::Long qw(GetOptions);
+use File::Find   qw(find);
 use File::Copy;
-use version; our $VERSION = qv('1.0.0');
+use version;
+our $VERSION = qv('1.1.0');
+
+=head1 SYNOPSIS
+
+renamer [options] DIRECTORY
+
+    Options:
+    --replace=CHAR     Replace spaces with specified CHAR (default: underscore)
+    --ext=EXTENSION    Process files with specified EXTENSION (default: pdf)
+    --help             Display this help message
+
+=head1 DESCRIPTION
+
+A file utility tool that gets rid of spaces, commas, dots, and dashes.
+
+=head1 EXAMPLES
+
+    renamer  /home/user/Documents
+
+    renamer --replace=# --ext=txt /dir
+
+=head1 AUTHOR
+
+baduker <baduker@protonmail.ch>
+
+=head1 LICENSE AND COPYRIGHT
+
+MIT License
+
+Copyright (c) 2023 baduker
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+=cut
 
 =begin comment
+
 Function sanitize_file_name sanitizes the file name by removing spaces, commas, dashes and dots
 except the dot before the file extension.
 =end comment
@@ -22,11 +74,11 @@ sub sanitize_file_name {
     # Remove commas and dashes
     $file_name =~ s/[,-]+/$replace_char/g;
 
-    # Replace consecutive underscores with a single underscore
-    $file_name =~ s/(?<!\.)_+/$replace_char/g;
-
     # Replace dots with underscores, except the one before the file extension
     $file_name =~ s/(?<=\b)(?<!\.)\.(?![^.]+$)/$replace_char/g;
+
+    # Replace consecutive underscores with a single underscore
+    $file_name =~ s/(?<!\.)_+/$replace_char/g;
 
     return $file_name;
 }
@@ -73,11 +125,11 @@ GetOptions(
     'replace=s' => \$replace_char,
     'ext=s' => \$extension,
     'help' => \$help
-) or die 'Error in command line arguments\n';
+) or die "Error in command line arguments\n";
 
 # Display help message
 if (defined $help) {
-    print "Usage: $0 [options] DIRECTORY\n" or croak $!;
+    print "Usage: $0 [options] DIRECTORY\n";
     print "Options:\n";
     print "  --replace=CHAR     Replace spaces with specified CHAR (default: underscore)\n";
     print "  --ext=EXTENSION    Process files with specified EXTENSION (default: pdf)\n";
