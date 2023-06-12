@@ -34,6 +34,10 @@ A file utility tool that gets rid of spaces, commas, dots, and dashes.
 
     renamer --replace=# --ext=txt /dir
 
+    renamer --ext=jpg ../dir
+
+    renamer --ext=txt --replace=__ ~/Documents/my_files
+
 =head1 AUTHOR
 
 baduker <baduker@protonmail.ch>
