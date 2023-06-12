@@ -133,7 +133,8 @@ my $help;
 GetOptions(
     'replace=s' => \$replace_char,
     'ext=s' => \$extension,
-    'help' => \$help
+    'help' => \$help,
+    'version' => sub { print "renamer v$VERSION\n"; exit }
 ) or die "Error in command line arguments\n";
 
 # Display help message
