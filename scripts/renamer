@@ -6,8 +6,10 @@ use Pod::Usage;
 use Getopt::Long qw(GetOptions);
 use File::Find   qw(find);
 use File::Copy;
+use English qw(-no_match_vars);
+use Path::Tiny;
 use version;
-our $VERSION = qv('1.1.0');
+our $VERSION = qv('1.2.0');
 
 =head1 SYNOPSIS
 
@@ -21,6 +23,10 @@ renamer [options] DIRECTORY
 =head1 DESCRIPTION
 
 A file utility tool that gets rid of spaces, commas, dots, and dashes.
+
+=head1 USAGE
+
+    renamer [options] DIRECTORY
 
 =head1 EXAMPLES
 
@@ -101,19 +107,22 @@ sub rename_file {
         rename $old_name, $new_name;
         print "File renamed: '$old_file_name' -> '$new_file_name'\n";
     }
+    return 0;
 }
 
 # Function to process files in a directory
 sub process_files {
     my ($file, $extension, $replace_char) = @_;
 
+    my $full_path = path($file)->absolute;
+
     return unless -f $file;
     return unless $file =~ /\.(?:$extension)$/i;
 
     my $new_file_name = sanitize_file_name($file, $replace_char);
-    my $new_full_path = $file;
-    $new_full_path =~ s/([^\/]+)$/$new_file_name/;
-    rename_file($file, $new_full_path);
+
+    rename_file($full_path, $new_file_name);
+    return 0;
 }
 
 my $replace_char = '_'; # Default replacement character
@@ -129,7 +138,7 @@ GetOptions(
 
 # Display help message
 if (defined $help) {
-    print "Usage: $0 [options] DIRECTORY\n";
+    print "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
     print "Options:\n";
     print "  --replace=CHAR     Replace spaces with specified CHAR (default: underscore)\n";
     print "  --ext=EXTENSION    Process files with specified EXTENSION (default: pdf)\n";
@@ -140,7 +149,7 @@ if (defined $help) {
 # Check if a directory is provided
 if (@ARGV != 1) {
     print "Error: No directory provided\n";
-    die "Usage: $0 [options] DIRECTORY\n";
+    die "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
 }
 
 my $directory = $ARGV[0];
