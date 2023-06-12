@@ -10,7 +10,7 @@ use English qw(-no_match_vars);
 use Path::Tiny;
 use Config;
 use version;
-our $VERSION = qv('1.4.3');
+our $VERSION = qv('1.5.3');
 
 =head1 SYNOPSIS
 
@@ -154,48 +154,51 @@ sub process_files {
     return 0;
 }
 
-my $replace_char = '_'; # Default replacement character
-my $extension = 'pdf';  # Default file extension
-my $help;
+sub main {
+    my $replace_char = '_'; # Default replacement character
+    my $extension = 'pdf';  # Default file extension
+    my $help;
 
-# Parse command line options
-GetOptions(
-    'replace=s' => \$replace_char,
-    'ext=s' => \$extension,
-    'help' => \$help,
-    'version' => sub { print "renamer v$VERSION on $Config{osname} at $Config{archname}\n"; exit }
-) or die "Error in command line arguments\n";
+    # Parse command line options
+    GetOptions(
+        'replace=s' => \$replace_char,
+        'ext=s' => \$extension,
+        'help' => \$help,
+        'version' => sub { print "renamer v$VERSION on $Config{osname} at $Config{archname}\n"; exit }
+    ) or die "Error in command line arguments\n";
 
-# Display help message
-if (defined $help) {
-    print "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
-    print "Options:\n";
-    print "  --replace=CHAR     Replace spaces with specified CHAR (default: underscore)\n";
-    print "  --ext=EXTENSION    Process files with specified EXTENSION (default: pdf)\n";
-    print "  --help             Display this help message\n";
-    exit;
+    # Display help message
+    if (defined $help) {
+        print "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
+        print "Options:\n";
+        print "  --replace=CHAR     Replace spaces with specified CHAR (default: underscore)\n";
+        print "  --ext=EXTENSION    Process files with specified EXTENSION (default: pdf)\n";
+        print "  --help             Display this help message\n";
+        exit;
+    }
+
+    # Check if a directory is provided
+    if (@ARGV != 1) {
+        print "Error: No directory provided\n";
+        die "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
+    }
+
+    my $target = $ARGV[0];
+
+    if (-f $target) {
+        process_files($target, $extension, $replace_char);
+        exit;
+    }
+
+    # Check if the directory exists
+    if (-d $target) {
+        # TODO: Skip hidden directories
+        # TODO: Add total files count
+        find(sub { process_files($File::Find::name, $extension, $replace_char) }, $target);
+    } else {
+        die "Error: Directory '$target' not found\n";
+    }
+    return 0;
 }
 
-# Check if a directory is provided
-if (@ARGV != 1) {
-    print "Error: No directory provided\n";
-    die "Usage: $EXECUTABLE_NAME [options] DIRECTORY\n";
-}
-
-my $target = $ARGV[0];
-
-if (-f $target) {
-    process_files($target, $extension, $replace_char);
-    exit;
-} else {
-    die "Error: File '$target' not found\n";
-}
-
-# Check if the directory exists
-if (-d $target) {
-    # TODO: Skip hidden directories
-    # TODO: Add total files count
-    find(sub { process_files($File::Find::name, $extension, $replace_char) }, $target);
-} else {
-    die "Error: Directory '$target' not found\n";
-}
+main();
