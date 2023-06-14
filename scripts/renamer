@@ -10,7 +10,7 @@ use English qw(-no_match_vars);
 use Path::Tiny;
 use Config;
 use version;
-our $VERSION = qv('1.5.3');
+our $VERSION = qv('1.5.4');
 
 =head1 SYNOPSIS
 
@@ -97,6 +97,9 @@ sub sanitize_file_name {
     # Remove the plus sign (+)
     $file_name =~ s/\+/$replace_char/g;
 
+    # Remove the apostrophe (')
+    $file_name =~ s/'/$replace_char/g;
+
     # Replace dots with underscores, except the one before the file extension
     $file_name =~ s/(?<=\b)(?<!\.)\.(?![^.]+$)/$replace_char/g;
 
@@ -122,14 +125,13 @@ sub rename_file {
 
     if ($old_file_name ne $new_file_name) {
         rename $old_name, $new_name;
-        print "File renamed: '$old_file_name' -> '$new_file_name'\n";
+        print "File renamed: '$old_file_name' -> '$new_file_name'\n" or die "Cannot print to STDOUT\n";
     }
     return 0;
 }
 
 # Function to process files in a directory
 sub process_files {
-    my $total_files = 0;
     my ($file, $extension, $replace_char) = @_;
 
     my $full_path = path($file)->absolute;
@@ -137,7 +139,7 @@ sub process_files {
     # Handle upward directory path (../<FOLDER_NAME>) and rename the files there too
     if ($file =~ /\.\.$/) {
         my $parent_dir = path($file)->parent;
-        print "Processing directory: '$parent_dir'\n";
+        print "Processing directory: '$parent_dir'\n" or die "Cannot print to STDOUT\n";
         my $new_file_name = sanitize_file_name($file, $replace_char);
         rename_file($full_path, $new_file_name);
         return 0;
