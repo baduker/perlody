@@ -1,0 +1,103 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use utf8;
+use Config;
+use English qw(-no_match_vars);
+
+use Pod::Usage;
+use File::Copy;
+use Getopt::Long qw(GetOptions);
+
+use version; our $VERSION = qv('0.0.1');
+
+# Default column width
+our $DEFAULT_COLUMN_WIDTH = 80;
+
+my $backup = 0;
+my $file_to_fold = undef;
+
+sub main {
+    my $help;
+
+    GetOptions(
+        'width=w' => \$DEFAULT_COLUMN_WIDTH,
+        'backup=b' => \$backup,
+        'help' => \$help,
+        'version' => sub {
+            print "foldo v$VERSION\n";
+            exit;
+        }
+    ) or die "Usage: $0 --file <file> [--help] [--version]\n";
+
+    if (defined $help) {
+        print "Usage: $EXECUTABLE_NAME [options] FILE\n";
+        print "Options:\n";
+        print "  --file <file>    The file to fold\n";
+        print "  --help           Print this help message\n";
+        print "  --version        Print the version number\n";
+        exit;
+    }
+
+    if (@ARGV != 1) {
+        print "Error: no file specified\n";
+        die "Usage: $EXECUTABLE_NAME [options] FILE\n";
+    }
+
+    $file_to_fold = $ARGV[0];
+
+    if ($backup) {
+        backup_file();
+    }
+
+    fold_lines();
+}
+
+sub backup_file {
+    my $backup_file = "$file_to_fold.bak";
+
+    if (-e $backup_file) {
+        die "Error: backup file $backup_file already exists\n";
+    }
+
+    copy($file_to_fold, $backup_file) or die "Error: could not backup file $file_to_fold\n";
+}
+
+sub fold_lines {
+    open(my $fh, '<', $file_to_fold) or die "Error: could not open file $file_to_fold\n";
+
+    my $line;
+    my $folded_line = '';
+    my $folded_line_length = 0;
+
+    while ($line = <$fh>) {
+        chomp $line;
+
+        if ($line =~ /^\s*$/) {
+            print "$folded_line\n\n";
+            $folded_line = '';
+            $folded_line_length = 0;
+            next;
+        }
+
+        my @words = split /\s+/, $line;
+
+        foreach my $word (@words) {
+            if ($folded_line_length + length($word) + 1 > $DEFAULT_COLUMN_WIDTH) {
+                print "$folded_line\n";
+                $folded_line = '';
+                $folded_line_length = 0;
+            }
+
+            $folded_line .= "$word ";
+            $folded_line_length += length($word) + 1;
+        }
+    }
+
+    if ($folded_line_length > 0) {
+        print "$folded_line\n";
+    }
+
+    close($fh);
+}
