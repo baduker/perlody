@@ -17,7 +17,7 @@ use version;
 
 binmode STDOUT, ':encoding(utf8)';
 
-our $VERSION = qv('1.6.1');
+our $VERSION = qv('1.6.2');
 our $TOTAL_FILES = 0;
 our @TABLE_LOAD;
 
@@ -208,7 +208,6 @@ sub main {
     # Check if the directory exists
     if (-d $target) {
         # TODO: Skip hidden directories
-        # TODO: Add total files count
         find(
             sub { process_files($File::Find::name, $extension, $replace_char) },
             $target
